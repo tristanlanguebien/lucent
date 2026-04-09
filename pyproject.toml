@@ -1,0 +1,17 @@
+[project]
+name = "lucent"
+version = "0.0.1"
+description = "System for defining, validating, and resolving naming conventions."
+readme = "README.md"
+authors = [
+    { name = "Tristan Languebien", email = "tlanguebien@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+lucent = "lucent.lucent_example_config:main"
+
+[build-system]
+requires = ["uv_build>=0.10.11,<0.11.0"]
+build-backend = "uv_build"
