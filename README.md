@@ -20,6 +20,7 @@ There are existing solutions mostly used by the 3D animation community (Lucidity
 
 ## Requirements
 Python >= 3.9
+
 Note: The new type annotation syntax was introduced in Python 3.9 (PEP 585), and while there is no plan for removal
 at the moment, using modern annotations is more future-proof.
 
@@ -40,62 +41,67 @@ from lucent import Rule, Rules, Convention, Conventions, Codex
 
 class MyRules(Rules):
     # The default Rule is mandatory. In this example, only letters and numbers are allowed.
-    default = Rule(r'[a-zA-Z0-9]+')
+    default = Rule(r"[a-zA-Z0-9]+")
 
     # To help the end user, you can provide examples (they will appear in error messages).
-    extension = Rule(r'[a-zA-Z0-9]+', examples=['mp3', 'png', 'mov'])
+    extension = Rule(r"[a-zA-Z0-9]+", examples=["mp3", "png", "mov"])
 
     # Here are a few more simple examples.
-    project = Rule(r'[a-zA-Z]+', examples=['mySuperProject'])
-    asset = Rule(r'([a-z]+)([A-Z][a-z]*)*(\d{2})', examples=['peach00', 'redApple01', 'philip02', 'cassie05'])
-    type = Rule(r'[a-z]+', examples=['prop', 'character', 'environment'])
-    season = Rule(r's\d{3}', examples=['s001'])
-    episode = Rule(r'ep\d{3}', examples=['ep001'])
-    sequence = Rule(r'sq\d{3}', examples=['sq001'])
-    shot = Rule(r'sh\d{4}[A-Z]?', examples=['sh0010', 'sh0010A'])
-    version = Rule(r'\d{3}', examples=["001", "002", "003"])
+    project = Rule(r"[a-zA-Z]+", examples=["mySuperProject"])
+    asset = Rule(r"([a-z]+)([A-Z][a-z]*)*(\d{2})", examples=["peach00", "redApple01", "philip02", "cassie05"])
+    type = Rule(r"[a-z]+", examples=["prop", "character", "environment"])
+    group = Rule(r"[a-z]+", examples=["main", "secondary", "tertiary"])
+    season = Rule(r"s\d{3}", examples=["s001"])
+    episode = Rule(r"ep\d{3}", examples=["ep001"])
+    sequence = Rule(r"sq\d{3}", examples=["sq001"])
+    shot = Rule(r"sh\d{4}[A-Z]?", examples=["sh0010", "sh0010A"])
+    version = Rule(r"\d{3}", examples=["001", "002", "003"])
 
     # Rules are basically regular expressions with extra features. Feel free to get creative.
-    frame = Rule(r'\d{4}|#{4}|%04d', examples=['0001', '####', '%04d'])
+    frame = Rule(r"\d{4}|#{4}|%04d", examples=["0001", "####", "%04d"])
 ```
 
 ### Conventions
 Now, let's define the Conventions.
 
-A Convention describes a template that can be resolved by providing field values.
+A Convention is a basically a template made up of fields, environment variables and... other Conventions.
 ```python
 
 class MyConventions(Conventions):
     # Here's a simple Convention with a field.
-    project_root = Convention('D:/projects/{project}')
+    project_root = Convention("D:/projects/{project}")
 
     # A Convention can reference other Conventions.
-    library_dir = Convention('{@project_root}/library')
-    asset_dir = Convention('{@library_dir}/{type}/{asset}')
+    library_dir = Convention("{@project_root}/library")
+    asset_dir = Convention("{@library_dir}/{type}/{asset}")
 
-    # Some fields can be fixed. In this example, files ending with '.mp4' will not match.
-    asset_maya_file = Convention('{@asset_dir}/{asset}_v{version}.{extension}', fixed_fields={'extension': 'ma'})
+    # Some fields can be fixed. In this example, files ending with '.mp4' will not match,
+    # and the template can be formatted without providing an extension field.
+    asset_maya_file = Convention("{@asset_dir}/{asset}_v{version}.{extension}", fixed_fields={"extension": "ma"})
+    asset_publish_file = Convention(
+        "{@asset_dir}/publish/v{version}/someSubdir/{asset}_v{version}.{extension}", fixed_fields={"extension": "ma"}
+    )
 
     # Fixed fields can also be used to add extra constraints to an existing Convention.
-    prop_maya_file = Convention('{@asset_maya_file}', fixed_fields={'type': 'prop', 'extension': 'ma'})
+    prop_maya_file = Convention("{@asset_maya_file}", fixed_fields={"type": "prop"})
 
     # Conventions may also use environment variables.
-    user_dir = Convention('{@project_root}/users/{$USERNAME}')
+    user_dir = Convention("{@project_root}/users/{$USERNAME}")
 
     # Be creative, Lucent can be used for more than just paths!
     # Just be careful with characters that need to be escaped.
-    say_hello = Convention('Hello {friend}, my name is {$USERNAME}')
+    say_hello = Convention("Hello {friend}, my name is {$USERNAME}")
     database_query = Convention('{{"asset_name": "asset"}}')
-    maya_asset_dag_path = Convention('|assets|{type}|{type}_{asset}')
-    unique_id_with_datetime = Convention('{item_name}_{year}_{month}_{day}_{hour}_{min}_{sec}_{uuid}')
-    api_route = Convention('https://api.example.com/{project}/{asset}')
+    maya_asset_dag_path = Convention("|assets|{type}|{type}_{asset}")
+    unique_id_with_datetime = Convention("{item_name}_{year}_{month}_{day}_{hour}_{min}_{sec}_{uuid}")
+    api_route = Convention("https://api.example.com/{project}/{asset}")
 ```
 
 ### Codex
 Finally, let's wrap everything into the Codex.
 
 The Codex is the top-level container that brings together all Rules and Conventions,
-and exposes methods for parsing and formatting.
+and exposes methods for parsing, formatting, file discovery, and much more.
 
 ```python
 class MyCodex(Codex):
@@ -104,6 +110,7 @@ class MyCodex(Codex):
     rules: MyRules = MyRules()
 
 # A Codex instance can be created at the module level so it can be used throughout your project.
+# Conventions use caching to improve performance, so avoid creating multiple instances of your Codex
 codex = MyCodex()
 ```
 

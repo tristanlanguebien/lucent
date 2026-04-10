@@ -20,8 +20,8 @@ Rules
     Rules are shared across all Conventions.
 
 Convention
-    Describes a pattern that combines multiple fields into a
-    single template. A Convention can reference other Conventions and can also include fixed fields.
+    A Convention is a template made up of fields, environment variables and... other Conventions.
+    It can also include fixed fields.
 
 FixedFields
     A set of constant field values. These values are checked when parsing and

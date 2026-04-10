@@ -34,7 +34,7 @@ class MyRules(Rules):
 
 
 # Now, let's define the Conventions.
-# A Convention describes a template that can be resolved by providing field values.
+# A Convention is a basically a template made up of fields, environment variables and... other Conventions.
 class MyConventions(Conventions):
     # Here's a simple Convention with a field.
     project_root = Convention("D:/projects/{project}")
@@ -67,7 +67,7 @@ class MyConventions(Conventions):
 
 # Finally, let's wrap everything into the Codex.
 # The Codex is the top-level container that brings together all Rules and Conventions,
-# and exposes methods for parsing and formatting.
+# and exposes methods for parsing, formatting, file discovery, and much more.
 class MyCodex(Codex):
     # This notation may look redundant, but it is required for proper auto-completion.
     convs: MyConventions = MyConventions()
