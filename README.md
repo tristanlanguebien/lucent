@@ -7,6 +7,17 @@ Lucent holds everything together within a Codex, which contains Conventions
 (string templates made up of fields) and Rules (that define how fields should
 behave).
 
+## Why yet another string formatter?
+
+There are existing solutions mostly used by the 3D animation community (Lucidity being a major influence for Lucent), all of which showed recurring limitations that justified building something new:
+
+- **Missing everyday features:** inheritance & composition, field validation, cross-pattern conversion, incrementation, file discovery, override rules... These always required extra wrapper code, or needed several lines where a single function call would suffice.
+- **Ambiguous string vs. path handling:** treating both as the same type leads to subtle bugs, since paths have OS-specific behaviors and character restrictions that plain strings don't.
+- **Poor special character support:** edge cases in pattern matching break silently.
+- **Legacy Python 2.7 design:** modern codebases shouldn't have to carry that weight, especially since the VFX Reference Platform moved to Python 3 years ago.
+- **Performance at scale:** individual string parsing is fast, but with hundreds of templates and thousands of files to resolve, unoptimized implementations add up quickly.
+- **Poor developer ergonomics:** verbose config files, no type annotations, no autocompletion, and unhelpful error messages make day-to-day use frustrating.
+
 ## Creating a configuration file
 
 Create a new module `lucent_config.py`
