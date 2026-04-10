@@ -18,6 +18,11 @@ There are existing solutions mostly used by the 3D animation community (Lucidity
 - **Performance at scale:** individual string parsing is fast, but with hundreds of templates and thousands of files to resolve, unoptimized implementations add up quickly.
 - **Poor developer ergonomics:** verbose config files, no type annotations, no autocompletion, and unhelpful error messages make day-to-day use frustrating.
 
+## Requirements
+Python >= 3.9
+Note: The new type annotation syntax was introduced in Python 3.9 (PEP 585), and while there is no plan for removal
+at the moment, using modern annotations is more future-proof.
+
 ## Creating a configuration file
 
 Create a new module `lucent_config.py`
