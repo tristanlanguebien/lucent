@@ -1,5 +1,5 @@
 [project]
-name = "lucent"
+name = "lucent-codex"
 version = "0.0.1"
 description = "System for defining, validating, and resolving naming conventions."
 readme = "README.md"
@@ -13,5 +13,12 @@ dependencies = []
 lucent = "lucent.lucent_example_config:main"
 
 [build-system]
-requires = ["uv_build>=0.10.11,<0.11.0"]
-build-backend = "uv_build"
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["lucent*"]
