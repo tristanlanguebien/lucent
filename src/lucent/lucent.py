@@ -20,13 +20,13 @@ Rules
     Rules are shared across all Conventions.
 
 Convention
-    A Convention is a template made up of fields, environment variables and... other Conventions.
+    A Convention is a template made of fields, environment variables, and references to other Conventions.
     It can also include fixed fields.
 
 FixedFields
     A set of constant field values. These values are checked when parsing and
     enforced when formatting, ensuring specific fields always retain
-    predetermined value.
+    predetermined values.
 
 Conventions
     A registry of all Convention objects within the Codex.
@@ -112,13 +112,13 @@ class Rule:
 
     def match(self, string: str, raise_exception: bool = False) -> bool:
         """
-        Returns whether or not the provided string respects the Rule
+        Return whether the provided string matches this Rule.
 
         Args:
             string: The string to match against the compiled pattern.
 
         Returns:
-            bool: True if the pattern matches the beginning of the string, False otherwise.
+            bool: True if the pattern matches the entire string, False otherwise.
         """
         result = bool(self._compiled_pattern.match(string))
         if not result and raise_exception:
@@ -127,8 +127,7 @@ class Rule:
 
     def get_mismatch_message(self, string: str) -> str:
         """
-        Returns a human readable message in case of mismatch, and provide examples if examples were provided
-        when creating the Rule
+        Return a human-readable message for a mismatch, including examples when available.
         """
         message = f'The field "{string}" does not respect the rule ({self.name}:"{self.pattern}")'
         if self.examples:
@@ -182,8 +181,8 @@ class Convention:
     - {@convention} -> reference to another convention
     - {$env_variable} -> environment variable
 
-    Convention instances use Rules to validate the value of each Field
-    Convention instances may include FixedFields ensuring specific fields always retain predetermined values
+    Convention instances use Rules to validate the value of each Field.
+    Convention instances may include FixedFields, ensuring specific fields always retain predetermined values.
 
     Args:
         template: Template string
@@ -292,7 +291,7 @@ class Convention:
         Extracted field values are returned as a dict.
 
         Args:
-            string: The string or Path to parse. Please note that lucent uses strings internally,
+            string: The string or Path to parse. Please note that Lucent uses strings internally,
             so all Path objects are converted to strings with forward slashes.
 
         Returns:
@@ -636,8 +635,7 @@ class Convention:
 
     def _fix_integer_fields(self, fields: dict[str, str]) -> dict[str, str]:
         """
-        Converts all fields provided as integer, and that can be automatically converted to str (thanks to the Rule that
-        relates to the field)
+        Convert integer-valued fields to strings when they can be formatted using their Rule examples.
         """
         _fields = fields.copy() if fields else {}
         for key, value in _fields.items():
@@ -649,8 +647,8 @@ class Convention:
 
     def _fix_integer_field(self, key: str, value: int) -> str:
         """
-        Converts the provided integer field into a string, if examples were provided in the related Rule.
-        Raises a LucentRuleNotFoundError if the Rule has no example
+        Convert the provided integer field to a zero-padded string based on the Rule examples.
+        Raises LucentRuleNotFoundError if the Rule does not exist or has no examples.
 
         Returns:
             string
@@ -818,7 +816,7 @@ class Convention:
 
     def show_mismatch(self, string: str, fields: Optional[dict[str, str]] = None):
         """
-        Compares the provided string against a ground truth string generated thanks to the provided fields
+        Compare the provided string against a reference string generated from the provided fields.
         """
         if self.match(string):
             logging.info(f"The provided string matches the Convention : {string}")
@@ -843,7 +841,7 @@ class Convention:
         logging.warning(marker_str)
 
     def match(self, string: str | Path) -> bool:
-        """Returns whether or not the string matches the template"""
+        """Return whether the string matches the template."""
         try:
             self.parse(string=string)
             return True
