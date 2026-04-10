@@ -324,7 +324,7 @@ class Convention:
             )
             raise LucentParseError("\n".join(error_message))
 
-        field_values: Defaultdict[str, Set[str]] = defaultdict(set)
+        field_values: defaultdict[str, Set[str]] = defaultdict(set)
         for group, value in match.groupdict().items():
             field = group.rsplit("_", 1)[0]
             field_values[field].add(value)
