@@ -20,22 +20,20 @@ Rules
     Rules are shared across all Conventions.
 
 Convention
-    Describes a concrete naming pattern that combines multiple fields into a
-    single template. Each Convention references one or more Rules to validate
-    its fields and can also include fixed values.
+    Describes a pattern that combines multiple fields into a
+    single template. A Convention can reference other Conventions and can also include fixed fields.
 
 FixedFields
     A set of constant field values. These values are checked when parsing and
     enforced when formatting, ensuring specific fields always retain
-    predetermined content.
+    predetermined value.
 
 Conventions
     A registry of all Convention objects within the Codex.
 
 Codex
     The top-level container that brings together all Rules and Conventions.
-    It defines a complete naming framework capable of validating, resolving,
-    and managing names according to the established conventions.
+    It defines a complete naming framework capable of validating and resolving strings.
 """
 
 from __future__ import annotations
@@ -53,7 +51,7 @@ from dataclasses import field as dataclass_field
 from datetime import datetime
 from functools import cached_property
 from pathlib import Path
-from typing import Callable, DefaultDict, Dict, List, Optional, Set, Tuple
+from typing import Callable, Optional, Set, Tuple
 
 from lucent.errors import (
     LucentConventionNotFoundError,
@@ -78,7 +76,7 @@ class Rule:
     validate field values.
 
     Args:
-        pattern: Regular expression pattern (string). Anchors are normalized.
+        pattern: Regular expression pattern (string).
         examples: Optional list of example strings that should match the pattern.
     """
 
@@ -87,7 +85,7 @@ class Rule:
 
     # Fill only these
     pattern: str
-    examples: List[str] = dataclass_field(default_factory=list[str])
+    examples: list[str] = dataclass_field(default_factory=list[str])
 
     def __post_init__(self):
         self._normalize_pattern()
@@ -114,7 +112,7 @@ class Rule:
 
     def match(self, string: str, raise_exception: bool = False) -> bool:
         """
-        Check if the compiled pattern matches the beginning of the string.
+        Returns whether or not the provided string respects the Rule
 
         Args:
             string: The string to match against the compiled pattern.
@@ -128,6 +126,10 @@ class Rule:
         return result
 
     def get_mismatch_message(self, string: str) -> str:
+        """
+        Returns a human readable message in case of mismatch, and provide examples if examples were provided
+        when creating the Rule
+        """
         message = f'The field "{string}" does not respect the rule ({self.name}:"{self.pattern}")'
         if self.examples:
             message += f"\nExample : {', '.join(self.examples)}"
@@ -137,9 +139,7 @@ class Rule:
 class Rules:
     """
     Collection of Rule objects.
-
-    This class gathers all Rule instances defined on a subclass and ensures a
-    default Rule exists (named "default").
+    This class gathers all Rule instances and ensures a default Rule exists (named "default").
 
     Raises:
         LucentDefaultRuleError: if a "default" Rule is not defined.
@@ -147,13 +147,13 @@ class Rules:
 
     def __init__(self):
         super().__init__()
-        self._rule_instances: List[Rule]
+        self._rule_instances: list[Rule]
         self._register_rules()
         self._check_default()
 
     def _register_rules(self):
         """
-        Discover attributes on the subclass that are Rule instances and register them.
+        Register Rule instances so they can be accessed by name.
         """
         self._rule_instances = []
         for attr in dir(self):
@@ -165,26 +165,28 @@ class Rules:
                 self._rule_instances.append(rule)
 
     def _check_default(self):
-        """Ensure that a 'default' Rule exists; raise if not."""
+        """Ensure that a 'default' Rule exists; raise LucentDefaultRuleError if not."""
         if not any([rule.name == "default" for rule in self._rule_instances]):
             raise LucentDefaultRuleError('Please define a "default" rule')
 
     def get_rule_by_name(self, name: str) -> Rule:
+        """Returns the Rule object that matches the provided name"""
         return getattr(self, name)
 
 
 @dataclass
 class Convention:
     """
-    A concrete naming pattern (template) made up of Fields.
+    A Convention is a pattern made up of Fields, and follows the syntax:
+    - {field_name} -> field
+    - {@convention} -> reference to another convention
+    - {$env_variable} -> environment variable
 
-    A Convention is a format-style template string where placeholders represent
-    Fields. Conventions reference Rules (via the parent Codex) to validate field
-    values and may include FixedFields which are enforced during formatting and
-    checked during parsing.
+    Convention instances use Rules to validate the value of each Field
+    Convention instances may include FixedFields ensuring specific fields always retain predetermined values
 
     Args:
-        template: Template string (e.g. "{category}_{id}_v{version}.ext").
+        template: Template string
         fixed_fields: Optional mapping of field names to constant values.
     """
 
@@ -193,30 +195,30 @@ class Convention:
 
     # Fillable at creation
     template: str
-    fixed_fields: Dict[str, str] = dataclass_field(default_factory=dict[str, str])
+    fixed_fields: dict[str, str] = dataclass_field(default_factory=dict[str, str])
 
     def __post_init__(self):
         self._codex: Codex
 
     @cached_property
-    def expanded_fixed_fields(self):
+    def expanded_fixed_fields(self) -> dict[str, str]:
+        """
+        Returns the fixed fields from the Convention, merged with the fixed fields of referenced Conventions
+        Returns:
+            dict: fully merged fixed_fields
+        """
         return self._get_expanded_fixed_fields()
 
-    def _get_expanded_fixed_fields(self):
+    def _get_expanded_fixed_fields(self) -> dict[str, str]:
         """
-        Recursively resolve and merge fixed_fields from referenced conventions.
-
-        Resolution order:
-            Parent conventions first
-            Then current convention overrides
-
+        Recursively resolve and merge fixed_fields from referenced Conventions.
         Returns:
             dict: fully merged fixed_fields
         """
         pattern = re.compile(r"{@([a-zA-Z0-9-_]+)}")
 
         def resolve(convention: Convention, recursion_depth=0):
-            if recursion_depth > 10:
+            if recursion_depth > 30:
                 raise LucentRecursionError(f"Too much recursion while resolving fixed_fields ({recursion_depth}).")
 
             merged = {}
@@ -235,7 +237,7 @@ class Convention:
                         f"Reference key '@{reference}' not found from description : {convention}"
                     ) from None
 
-                # Recursively resolve parent first (top → bottom)
+                # Recursively resolve parent first (top -> bottom)
                 parent_fields = resolve(parent, recursion_depth + 1)
                 merged.update(parent_fields)
 
@@ -247,10 +249,9 @@ class Convention:
 
         return resolve(self)
 
-    def format(self, fields: Optional[Dict[str, str]] = None) -> str:
+    def format(self, fields: dict[str, str] | None = None) -> str:
         """
-        Format this Convention's template with provided fields.
-
+        Format the Convention's template with provided fields.
         FixedFields and environment variables are filled in automatically.
 
         Args:
@@ -264,8 +265,7 @@ class Convention:
             LucentMissingEnvironmentVariablesError: if required environment vars are missing.
             LucentFieldValueError: if any provided field value violates its Rule.
         """
-        _fields: Dict[str, str] = fields.copy() if fields else {}
-        assert _fields is not None
+        _fields: dict[str, str] = fields.copy() if fields else {}
         self._check_missing_fields(_fields)
         self._check_missing_environment_variables()
         _fields.update(self.expanded_fixed_fields)
@@ -274,9 +274,9 @@ class Convention:
         self._check_rules(_fields)
         return self.expanded_template.format(**_fields)
 
-    def format_path(self, fields: Dict[str, str] | None = None) -> Path:
+    def format_path(self, fields: dict[str, str] | None = None) -> Path:
         """
-        Format the template and return a `pathlib.Path`.
+        Format the template and return a `pathlib.Path` object.
 
         Args:
             fields: Mapping of field names to values.
@@ -286,18 +286,17 @@ class Convention:
         """
         return Path(self.format(fields))
 
-    def parse(self, string: str | Path) -> Dict[str, str]:
+    def parse(self, string: str | Path) -> dict[str, str]:
         """
-        Parse a string according to this Convention.
-
-        Extracted field values are returned as a mapping.
+        Parse a string according to the Convention.
+        Extracted field values are returned as a dict.
 
         Args:
             string: The string or Path to parse. Please note that lucent uses strings internally,
             so all Path objects are converted to strings with forward slashes.
 
         Returns:
-            Mapping of field names to parsed values.
+            dict : Mapping of field names to parsed values.
 
         Raises:
             LucentParseError: when the string does not match the convention.
@@ -325,7 +324,7 @@ class Convention:
             )
             raise LucentParseError("\n".join(error_message))
 
-        field_values: DefaultDict[str, Set[str]] = defaultdict(set)
+        field_values: Defaultdict[str, Set[str]] = defaultdict(set)
         for group, value in match.groupdict().items():
             field = group.rsplit("_", 1)[0]
             field_values[field].add(value)
@@ -335,7 +334,7 @@ class Convention:
             return {field: list(values)[0] for field, values in field_values.items()}
 
         # Raise explicit error message
-        error_message: List[str] = []
+        error_message: list[str] = []
         for field, values in error_fields.items():
             error_message.append(f'Inconsistant values for field "{field}" : {values}')
         raise LucentInconsistentFieldsError("\n".join(error_message))
@@ -396,7 +395,7 @@ class Convention:
         return resolve(self.template)
 
     @cached_property
-    def required_fields(self) -> List[str]:
+    def required_fields(self) -> list[str]:
         """
         Return fields required to format the template that are not environment variables.
 
@@ -404,14 +403,14 @@ class Convention:
             List of unique field names required by the Convention.
         """
         fields = re.findall(r"\{(?!\$)([a-zA-Z0-9-_]+)\}", self.expanded_template)
-        unique_fields: List[str] = []
+        unique_fields: list[str] = []
         for field in fields:
             if field not in unique_fields:
                 unique_fields.append(field)
         return unique_fields
 
     @cached_property
-    def all_fields(self) -> List[str]:
+    def all_fields(self) -> list[str]:
         """
         Return all fields appearing in the template.
 
@@ -419,14 +418,14 @@ class Convention:
             List of unique field names (including those used as environment variables).
         """
         fields = re.findall(r"\{([a-zA-Z0-9-_]+)\}", self.expanded_template)
-        unique_fields: List[str] = []
+        unique_fields: list[str] = []
         for field in fields:
             if field not in unique_fields:
                 unique_fields.append(field)
         return unique_fields
 
     @cached_property
-    def mandatory_fields(self) -> List[str]:
+    def mandatory_fields(self) -> list[str]:
         """
         Return fields the user must provide to format the template.
 
@@ -438,7 +437,7 @@ class Convention:
         return [field for field in self.required_fields if field not in self.expanded_fixed_fields.keys()]
 
     @cached_property
-    def required_environment_variables(self) -> List[str]:
+    def required_environment_variables(self) -> list[str]:
         """
         Return names of environment variables used in the template.
 
@@ -450,19 +449,19 @@ class Convention:
         return re.findall(r"\{\$([a-zA-Z0-9-_]+)\}", self.expanded_template)
 
     @property
-    def environment_variables_fields(self) -> Dict[str, str]:
+    def environment_variables_fields(self) -> dict[str, str]:
         """
         Return a mapping of environment variable placeholders to their values.
 
         Returns:
             Mapping like {"$VAR": "value"} extracted from the process environment.
         """
-        fields: Dict[str, str] = {}
+        fields: dict[str, str] = {}
         for environment_variable in self.required_environment_variables:
             fields[f"${environment_variable}"] = os.environ[environment_variable]
         return fields
 
-    def human_readable_pattern(self, fields: Dict[str, str] | None = None) -> str:
+    def human_readable_pattern(self, fields: dict[str, str] | None = None) -> str:
         """
         Produce a human-readable representation of the template with missing fields left
         as placeholders.
@@ -480,7 +479,7 @@ class Convention:
             _fields[missing_field] = f"{{{missing_field}}}"
         return self.expanded_template.format(**_fields)
 
-    def human_readable_example_pattern(self, fields: Dict[str, str] | None = None) -> str:
+    def human_readable_example_pattern(self, fields: dict[str, str] | None = None) -> str:
         """
         Produce a human-readable template where missing fields are replaced by example values
         from their associated Rules when possible.
@@ -502,7 +501,7 @@ class Convention:
                 _fields[missing_field] = f"{{{missing_field}}}"
         return self.expanded_template.format(**_fields)
 
-    def generate_examples(self, fields: Dict[str, str] | None = None, num: int = 5):
+    def generate_examples(self, fields: dict[str, str] | None = None, num: int = 5):
         """
         Generate up to `num` unique example strings by combining example values
         from Rules for mandatory fields.
@@ -539,7 +538,7 @@ class Convention:
             _fields.update(fields)
         return sorted([self.human_readable_pattern(fields) for fields in random_fields])
 
-    def glob_pattern(self, fields: Dict[str, str] | None = None) -> str:
+    def glob_pattern(self, fields: dict[str, str] | None = None) -> str:
         """
         Produce a glob-style pattern for filesystem lookups where unspecified fields
         are replaced by '*' wildcards.
@@ -576,7 +575,7 @@ class Convention:
     @cached_property
     def regex_pattern(self) -> str:
         """
-        Construct a regular expression that matches this Convention as a whole.
+        Construct a regular expression that matches the Convention as a whole.
         """
 
         _fields = {}
@@ -591,9 +590,9 @@ class Convention:
         field_pattern = re.compile(r"\{([a-zA-Z0-9-_]+)\}")
 
         # Split template into literal and fields segments
-        parts: List[str] = []
+        parts: list[str] = []
         last_pos = 0
-        field_counts: DefaultDict[str, int] = defaultdict(int)
+        field_counts: defaultdict[str, int] = defaultdict(int)
 
         for match in field_pattern.finditer(template):
             # Escape literal text before the placeholder
@@ -614,12 +613,12 @@ class Convention:
         result = "".join(parts)
         return f"^{result}$"
 
-    def _get_missing_fields(self, fields: Dict[str, str]) -> List[str]:
+    def _get_missing_fields(self, fields: dict[str, str]) -> list[str]:
         """Return mandatory fields that are not present in the provided mapping."""
         _fields = [field for field in self.mandatory_fields if field not in fields]
         return list(set(_fields))
 
-    def _check_missing_fields(self, fields: Dict[str, str]) -> None:
+    def _check_missing_fields(self, fields: dict[str, str]) -> None:
         """Raise if required fields are missing for formatting."""
         missing_fields = self._get_missing_fields(fields)
         if missing_fields:
@@ -635,7 +634,11 @@ class Convention:
                 f"Some of the environment variables needed to resolve the Convention are missing : {missing}"
             )
 
-    def _fix_integer_fields(self, fields: Dict[str, str]) -> Dict[str, str]:
+    def _fix_integer_fields(self, fields: dict[str, str]) -> dict[str, str]:
+        """
+        Converts all fields provided as integer, and that can be automatically converted to str (thanks to the Rule that
+        relates to the field)
+        """
         _fields = fields.copy() if fields else {}
         for key, value in _fields.items():
             if key not in self.required_fields:
@@ -644,7 +647,14 @@ class Convention:
                 _fields[key] = self._fix_integer_field(key, value)
         return _fields
 
-    def _fix_integer_field(self, key: str, value: int):
+    def _fix_integer_field(self, key: str, value: int) -> str:
+        """
+        Converts the provided integer field into a string, if examples were provided in the related Rule.
+        Raises a LucentRuleNotFoundError if the Rule has no example
+
+        Returns:
+            string
+        """
         rule = self._codex.get_rule_by_name(key, default=False)
         err = LucentRuleNotFoundError(f'Cannot format integer field "{key}" if no rule with examples is provided')
         if not rule:
@@ -653,7 +663,7 @@ class Convention:
             raise err
         return str(value).zfill(len(rule.examples[0]))
 
-    def _check_rules(self, fields: Dict[str, str]) -> None:
+    def _check_rules(self, fields: dict[str, str]) -> None:
         """
         Validate provided fields against their associated Rules.
 
@@ -679,6 +689,18 @@ class Convention:
         field_to_increment: str = "version",
         fields_to_enforce: dict[str, str] | None = None,
     ) -> str:
+        """
+        Increments a field from the provided string (by default, the "version" field)
+        Additional fields may be set in the process.
+
+        Args:
+            string: string to modify
+            field_to_increment: name of the field that needs to be incremented
+            fields_to_enforce: additional fields to format
+
+        Raises:
+            LucentFieldValueError: if any value does not match its Rule.
+        """
         fields_to_enforce = fields_to_enforce or {}
         _fields = self.parse(string)
         value = _fields.get(field_to_increment)
@@ -696,9 +718,9 @@ class Convention:
         return result
 
     @cached_property
-    def _relevant_rules(self) -> Dict[str, str]:
+    def _relevant_rules(self) -> dict[str, str]:
         """
-        Return a mapping of rule name -> pattern for all Rules referenced by this Convention.
+        Return a mapping of rule name -> pattern for all Rules that apply to this Convention.
 
         The default Rule is always included when relevant.
         """
@@ -707,9 +729,9 @@ class Convention:
 
     def get_paths(
         self,
-        fields: Dict[str, str] | None = None,
-        sort_callback: Callable[[List[Path]], List[Path]] | None = None,
-    ) -> List[Path]:
+        fields: dict[str, str] | None = None,
+        sort_callback: Callable[[list[Path]], list[Path]] | None = None,
+    ) -> list[Path]:
         """
         Resolve the Convention to a list of filesystem paths using globbing.
 
@@ -725,8 +747,8 @@ class Convention:
         glob_pattern = self.glob_pattern(fields)
         parts = Path(glob_pattern).parts
 
-        src_dir_parts: List[str] = []
-        pattern_parts: List[str] = []
+        src_dir_parts: list[str] = []
+        pattern_parts: list[str] = []
         pattern_started = False
         for part in parts:
             if "*" in part:
@@ -748,7 +770,7 @@ class Convention:
             paths = list(src_dir.glob(pattern_str))
 
         # Only keep files that strictly match the convention
-        _paths: List[Path] = []
+        _paths: list[Path] = []
         for path in paths:
             try:
                 self.parse(path)
@@ -761,18 +783,19 @@ class Convention:
         _paths = _sort_callback(_paths)
         return _paths
 
-    def get_paths_sorted_by_date(self, fields: Dict[str, str] | None = None) -> List[Path]:
+    def get_paths_sorted_by_date(self, fields: dict[str, str] | None = None) -> list[Path]:
         """
         Return matching paths sorted by filesystem modification time.
         """
         return self.get_paths(fields, sort_callback_date)
 
-    def get_last_path(self, fields: Optional[Dict[str, str]] = None, order: str = "alphabetical") -> Path:
+    def get_last_path(self, fields: Optional[dict[str, str]] = None, order: str = "alphabetical") -> Path:
         """
         Return the last path in the requested ordering.
 
         Args:
             fields: Optional mapping to prefill some fields.
+                    All fields that are not provided will be replaced by wildcards
             order: "alphabetical" or "date".
 
         Returns:
@@ -793,7 +816,7 @@ class Convention:
             )
         return paths[-1]
 
-    def show_mismatch(self, string: str, fields: Optional[Dict[str, str]] = None):
+    def show_mismatch(self, string: str, fields: Optional[dict[str, str]] = None):
         """
         Compares the provided string against a ground truth string generated thanks to the provided fields
         """
@@ -838,12 +861,12 @@ class Conventions:
 
     def __init__(self):
         super().__init__()
-        self._convention_instances: List[Convention]
+        self._convention_instances: list[Convention]
         self._register_conventions()
 
     def _register_conventions(self):
         """
-        Discover attributes on the subclass that are Convention instances and register them.
+        Register Convention instances so they can be accessed by name
         """
         self._convention_instances = []
         for attr in dir(self):
@@ -925,22 +948,19 @@ class Codex:
         return result
 
     def solve(
-        self, string: str | Path, conventions: List[Convention] | None = None, reverse: bool = False
-    ) -> Tuple[Convention, Dict[str, str]]:
+        self, string: str | Path, conventions: list[Convention] | None = None, reverse: bool = False
+    ) -> Tuple[Convention, dict[str, str]]:
         """
-        Internal implementation of solve_string/solve_path.
-
-        Iterates through available Conventions (or a provided subset) and tries to parse
-        the string. Returns a SolvedString or SolvedPath for the first matching Convention.
+        Iterates through available Conventions (or a provided subset) and tries to parse the string.
+        Returns a tuple containing the matching Convention and the fields deduced from the parsing operation
 
         Args:
             string: The string to resolve.
-            return_as_path: Whether to return SolvedPath instead of SolvedString.
             conventions: Optional list of Convention instances to limit search.
             reverse: Whether to iterate conventions in reverse order.
 
         Returns:
-            SolvedString or SolvedPath.
+            Tuple containing the matching Convention and the fields deduced from the parsing operation
 
         Raises:
             LucentParseError: if no Convention matches.
@@ -974,15 +994,15 @@ class Codex:
             raise LucentParseError(f"The provided string does not match any convention : {string}")
 
     def get_fields(
-        self, string: str, conventions: List[Convention] | None = None, reverse: bool = True
-    ) -> Dict[str, str]:
+        self, string: str, conventions: list[Convention] | None = None, reverse: bool = True
+    ) -> dict[str, str]:
         """
-        Convenience: parse a string and return its fields using the first matching Convention.
+        Parse a string and return its fields.
 
         Args:
             string: The string to parse.
-            conventions: Optional list to limit candidate Conventions.
-            reverse: Whether to search in reverse order.
+            conventions: Optional list to limit search.
+            reverse: Whether to iterate conventions in reverse order.
 
         Returns:
             Mapping of field names to values.
@@ -992,7 +1012,7 @@ class Codex:
         return fields
 
     def get_convention(
-        self, string: str | Path, conventions: List[Convention] | None = None, reverse: bool = True
+        self, string: str | Path, conventions: list[Convention] | None = None, reverse: bool = True
     ) -> Convention:
         """
         Return the Convention that matches the provided string.
@@ -1013,8 +1033,8 @@ class Codex:
         self,
         string: str | Path,
         target_convention: Optional[Convention] = None,
-        fields: Optional[Dict[str, str]] = None,
-        conventions: List[Convention] | None = None,
+        fields: Optional[dict[str, str]] = None,
+        conventions: list[Convention] | None = None,
     ) -> str:
         """
         Parse a string and re-format it using another Convention.
@@ -1042,25 +1062,39 @@ class Codex:
         string: str | Path,
         field_to_increment: str = "version",
         fields_to_enforce: Optional[dict[str, str]] = None,
-        conventions: List[Convention] | None = None,
+        conventions: list[Convention] | None = None,
         reverse: bool = False,
     ) -> str:
+        """
+        Increments a field from the provided string (by default, the "version" field)
+        Additional fields may be set in the process.
+
+        Args:
+            string: string to modify
+            field_to_increment: name of the field that needs to be incremented
+            fields_to_enforce: additional fields to format
+            conventions: Optional list to limit candidate Conventions when parsing.
+            reverse: Whether to iterate over conventions in reverse order.
+
+        Returns:
+            source string, with a field incremented by one
+        """
         conventions = conventions or []
         convention = self.get_convention(string, conventions, reverse)
         result = convention.increment(string, field_to_increment, fields_to_enforce)
         return result
 
-    def get_datetime_fields(self) -> Dict[str, str]:
+    def get_datetime_fields(self) -> dict[str, str]:
         """Return a mapping of current datetime fields (year, month, day, hour, min, sec)."""
         return get_datetime_fields()
 
-    def get_uuid_field(self) -> Dict[str, str]:
+    def get_uuid_field(self) -> dict[str, str]:
         """Return a mapping containing a generated uuid value for the 'uuid' field."""
         return get_uuid_field()
 
     @cached_property
     def human_readable(self) -> str:
-        """Returns a human readable version of the codex"""
+        """Returns a human readable version of the codex, detailing its Rules and Conventions"""
         lines = ["Lucent Configuration:", ""]
 
         # Rules
@@ -1082,19 +1116,20 @@ class Codex:
         return "\n".join(lines)
 
 
-def sort_callback_alphabetical(paths: List[Path]) -> List[Path]:
+def sort_callback_alphabetical(paths: list[Path]) -> list[Path]:
     """Return matching paths sorted lexicographically."""
     return sorted(paths)
 
 
-def sort_callback_date(paths: List[Path]) -> List[Path]:
+def sort_callback_date(paths: list[Path]) -> list[Path]:
+    """Return matching paths sorted by date."""
     return sorted(paths, key=lambda x: os.path.getmtime(x))
 
 
-def get_datetime_fields() -> Dict[str, str]:
-    """Return a mapping of datetime values for common fields."""
+def get_datetime_fields() -> dict[str, str]:
+    """Return a mapping of datetime values for common fields (year, month, day, hour, min, sec)."""
     now = datetime.now()
-    fields: Dict[str, str] = {
+    fields: dict[str, str] = {
         "year": now.strftime("%Y"),
         "month": now.strftime("%m"),
         "day": now.strftime("%d"),
@@ -1105,7 +1140,7 @@ def get_datetime_fields() -> Dict[str, str]:
     return fields
 
 
-def get_uuid_field() -> Dict[str, str]:
+def get_uuid_field() -> dict[str, str]:
     """Return a mapping containing a generated UUID hex string under the 'uuid' key."""
-    fields: Dict[str, str] = {"uuid": str(uuid.uuid4().hex)}
+    fields: dict[str, str] = {"uuid": str(uuid.uuid4().hex)}
     return fields
