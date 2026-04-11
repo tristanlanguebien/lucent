@@ -1,4 +1,3 @@
-
 # Lucent
 
 Lucent is a system for defining, validating, and resolving naming conventions.
@@ -11,12 +10,12 @@ behave).
 
 There are existing solutions mostly used by the 3D animation community (Lucidity being a major influence for Lucent), all of which showed recurring limitations that justified building something new:
 
-- **Missing everyday features:** inheritance & composition, field validation, cross-pattern conversion, incrementation, file discovery, override rules... These always required extra wrapper code, or needed several lines where a single function call would suffice.
-- **Ambiguous string vs. path handling:** treating both as the same type leads to subtle bugs, since paths have OS-specific behaviors and character restrictions that plain strings don't.
-- **Poor special character support:** edge cases in pattern matching break silently.
-- **Legacy Python 2.7 design:** modern codebases shouldn't have to carry that weight, especially since the VFX Reference Platform moved to Python 3 years ago.
-- **Performance at scale:** individual string parsing is fast, but with hundreds of templates and thousands of files to resolve, unoptimized implementations add up quickly.
-- **Poor developer ergonomics:** verbose config files, no type annotations, no autocompletion, and unhelpful error messages make day-to-day use frustrating.
+- **Added everyday features**: unified field validation, file discovery, cross-pattern conversion, incrementation, overrides, human-readable representations... All methods are available from a single Codex object, no extra code needed.
+- **Developer ergonomics**: extra care was taken to make config files easy to write and easy to read, build a structure that allows autocompletion, and provide helpful error messages.
+- **Path handling**: treating paths and strings as the same type leads to subtle bugs, since paths have OS-specific behaviors and character restrictions that plain strings don't.
+- **Python 3.9+ design**: modern codebases shouldn't have to carry the weight of Python 2.7, especially since the VFX Reference Platform moved to Python 3 years ago.
+- **Performance at scale**: individual string parsing is fast, but with hundreds of templates and thousands of files to resolve, unoptimized implementations add up quickly.
+
 
 ## Requirements
 - Python >= 3.9
