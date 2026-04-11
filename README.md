@@ -19,7 +19,7 @@ There are existing solutions mostly used by the 3D animation community (Lucidity
 - **Poor developer ergonomics:** verbose config files, no type annotations, no autocompletion, and unhelpful error messages make day-to-day use frustrating.
 
 ## Requirements
-Python >= 3.9
+- Python >= 3.9
 
 Note: The new type annotation syntax was introduced in Python 3.9 (PEP 585), and while there is no plan for removal
 at the moment, using modern annotations is more future-proof.
@@ -33,7 +33,7 @@ Use your preferred package installer:
 
 ```poetry add lucent-codex```
 
-To try it quickly, Lucent provides an example configuration that you can use out of the box:
+To try it quickly, Lucent provides an example configuration for testing purposes:
 
 ```python
 from lucent.lucent_example_config import codex
@@ -194,41 +194,41 @@ fields = {
     'asset': 'bob01',
     'type': 'character'
 }
-codex.convs.asset_dir.format(fields)
+print(codex.convs.asset_dir.format(fields))
 # >>> D:/projects/myAwesomeProject/library/character/bob01
 ```
 
 #### Fixed Fields
-You can use fixed fields to enforce some values (see fixed_fields in the configuration file)
+You can use fixed fields to enforce some values (see fixed_fields in the configuration file).
 ```python
+# In this example, "type" is incorrect, and "extension" was omitted.
 fields = {
-    'project': 'myAwesomeProject',
-    'asset': 'hammer01',
-    'type': 'character',
-    'version': 1  # Some fields can be provided as integers if a Rule with examples is set.
+    "project": "myAwesomeProject",
+    "asset": "hammer01",
+    "type": "character",  # should be "prop"
+    "version": "001",
 }
-codex.convs.prop_maya_file.format(fields)
+print(codex.convs.prop_maya_file.format(fields))
 # >>> D:/projects/myAwesomeProject/library/env/hammer01/hammer01_v001.ma
 ```
-In this example, "type" is incorrect, and "extension" was omitted, yet the Convention was formatted just fine.
 
 ### Solve a String
 Let's solve a string to identify the Convention and extract fields.
 ```python
 my_string = '|assets|character|character_littleGirl06'
 conv, fields = codex.solve(string=my_string)
-conv.name
+print(conv.name)
 # >>> maya_asset_dag_path
-fields
+print(fields)
 # >>> {'type': 'character', 'asset': 'littleGirl06'}
 ```
 
 Alternatively, you can use the get_fields() and get_convention() methods.
 ```python
 path = "D:/projects/myAwesomeProject/library/fx/sparks01/sparks01_v035.ma"
-codex.get_fields(path)
+print(codex.get_fields(path))
 # >>> {'project': 'myAwesomeProject', 'type': 'fx', 'asset': 'sparks01', 'version': '035', 'extension': 'ma'}
-codex.get_convention(path).name
+print(codex.get_convention(path).name)
 # >>> asset_maya_file
 ```
 
@@ -238,41 +238,49 @@ Let's now see how to convert one string/path into another.
 Here is an example to convert a string to the same Convention, but using other values for fields.
 ```python
 source = "D:/projects/myAwesomeProject/library/fx/sparks01/sparks01_v035.ma"
-codex.transmute(source, fields={"version": "042"})
+print(codex.transmute(source, fields={"version": "042"}))
+# >>> D:/projects/myAwesomeProject/library/fx/sparks01/sparks01_v042.ma
 ```
 
 And more importantly, here is how to convert from to Convention to another Convention
-```
+```python
 source = "D:/projects/myAwesomeProject/library/fx/sparks01/sparks01_v035.ma"
-codex.transmute(source, target_convention=codex.convs.maya_asset_dag_path)
+print(codex.transmute(source, target_convention=codex.convs.maya_asset_dag_path))
 # >>> |assets|fx|fx_sparks01
 ```
 
+## About Path objects
 
-Please note that transmute() returns a value with the same type as the source.
-Make sure to convert your source if needed, and be careful with slashes.
+Please note that all methods involving formatting and parsing support Path objects, but will always use strings with forward slashes under the hood. Thus, it is heavily advised to only use forward slashes in your Conventions unless you know what you are doing.
 
-Under the hood, Lucent converts paths into posix, so it is heavily advised to
-only use forward slashes in your Conventions
 
+For instance, this will fail on windows, because WindowsPath use backwards slashes
 ```python
 from pathlib import Path
-source = Path("D:/projects/myAwesomeProject/library/fx/sparks01/sparks01_v035.ma")
-codex.transmute(str(source), target_convention=codex.convs.maya_asset_dag_path)
-```
-This will fail on windows, because WindowsPath use backwards slashes.
 
-In the other hand, this will work just fine:
-
+path = Path("D:/projects/myAwesomeProject/library/fx/sparks01/sparks01_v035.ma")
+try:
+    codex.transmute(str(path), target_convention=codex.convs.maya_asset_dag_path)
+except Exception as err:
+    print(err)
+# >>> The provided string does not match any convention : D:\projects\myAwesomeProject\library\fx\sparks01\sparks01_v035.ma
 ```
-codex.transmute(source.as_posix(), target_convention=codex.convs.maya_asset_dag_path)
+
+And this will work fine, because Lucent properly uses forward slashes under the hood
+```python
+from pathlib import Path
+
+path = Path("D:/projects/myAwesomeProject/library/fx/sparks01/sparks01_v035.ma")
+result = codex.transmute(path, target_convention=codex.convs.maya_asset_dag_path)
+print(result)
+# >>> |assets|fx|fx_sparks01
 ```
 
 ### Incrementation
 An increment method is available out of the box.
 ```python
 source = Path("D:/projects/myAwesomeProject/library/fx/sparks01/sparks01_v035.ma")
-codex.increment(source, field_to_increment="version")
+print(codex.increment(source, field_to_increment="version"))
 # >>> D:\projects\myAwesomeProject\library\fx\sparks01\sparks01_v036.ma
 ```
 
@@ -297,7 +305,7 @@ Lucent has a couple of field generators to help you.
 fields = {"item_name": "spoon"}
 fields.update(codex.get_uuid_field())
 fields.update(codex.get_datetime_fields())
-codex.convs.unique_id_with_datetime.format(fields)
+print(codex.convs.unique_id_with_datetime.format(fields))
 # >>> spoon_2025_11_07_16_43_01_570dab8a1005421bac4091a8eff1a3ae
 ```
 
@@ -305,33 +313,33 @@ codex.convs.unique_id_with_datetime.format(fields)
 As regular expressions can be a bit daunting for the end user, Lucent provides a few ways to print out Conventions in a more appealing form, and come out with examples
 
 ```python
-codex.convs.asset_maya_file.human_readable_pattern()
+print(codex.convs.asset_maya_file.human_readable_pattern())
 # >>> D:/projects/{project}/library/{type}/{asset}/{asset}_v{version}.ma
 ```
 
 ```python
-codex.convs.asset_maya_file.glob_pattern()
+print(codex.convs.asset_maya_file.glob_pattern())
 # >>> D:/projects/*/library/*/*/*_v*.ma
 ```
 
 ```python
-codex.convs.asset_maya_file.human_readable_example_pattern()
+print(codex.convs.asset_maya_file.human_readable_example_pattern())
 # >>> D:/projects/mySuperProject/library/prp/peach00/peach00_v001.ma
 ```
 
 ```python
-codex.convs.asset_maya_file.generate_examples(num=2)
+print(codex.convs.asset_maya_file.generate_examples(num=2))
 # >>> ['D:/projects/mySuperProject/library/chr/cassie05/cassie05_v003.ma',
 #      'D:/projects/mySuperProject/library/env/redApple01/redApple01_v002.ma']
 ```
 
 ```python
-codex.convs.asset_maya_file.regex_pattern
+print(codex.convs.asset_maya_file.regex_pattern)
 # >>> ^D:/projects/(?P<project_0>[a-zA-Z]+)/library/(?P<type_0>[a-z]+)/(?P<asset_0>([a-z]+)([A-Z][a-z]*)*(\d{2}))/(?P<asset_1>([a-z]+)([A-Z][a-z]*)*(\d{2}))_v(?P<version_0>\d{3}).(?P<extension_0>ma)$
 ```
 
 ```python
-codex.human_readable
+print(codex.human_readable)
 # >>> Lucent Configuration:
 
 # Rules:
