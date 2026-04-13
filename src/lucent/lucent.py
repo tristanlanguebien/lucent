@@ -1110,7 +1110,7 @@ class Codex:
         for conv in sorted_convs:
             spaces = max_conv_name - len(conv.name)
             spaces = " " * spaces
-            lines.append(f'  - {conv.name}{spaces}: "{conv.expanded_template}"')
+            lines.append(f'  - {conv.name}{spaces}: "{conv.human_readable_pattern()}"')
         return "\n".join(lines)
 
 
