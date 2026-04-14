@@ -368,6 +368,12 @@ print(codex.human_readable)
 #   - maya_asset_dag_path    : "|assets|{type}|{type}_{asset}"
 ```
 
+## Lucent Watcher
+
+lucent_watcher is an extension module for lucent that monitors filesystem events relevant to a Codex.
+
+For more informations, please visit the [lucent_watcher github page](https://github.com/tristanlanguebien/lucent_watcher)
+
 ## Glossary
 
 ### Field
