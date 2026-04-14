@@ -1,6 +1,6 @@
 [project]
 name = "lucent-codex"
-version = "0.0.1"
+version = "0.0.2"
 description = "System for defining, validating, and resolving naming conventions."
 readme = "README.md"
 authors = [
@@ -8,6 +8,22 @@ authors = [
 ]
 requires-python = ">=3.9"
 dependencies = []
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+keywords = ["filesystem", "templating", "regex", "file discovery", "naming conventions"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14"
+]
+
+[project.urls]
+Homepage = "https://github.com/tristanlanguebien/lucent"
 
 [project.scripts]
 lucent = "lucent.lucent_example_config:main"
