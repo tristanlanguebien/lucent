@@ -298,7 +298,34 @@ def sort_callback(paths):
 codex.convs.asset_dir.get_paths(sort_callback=sort_callback)
 ```
 
-## Time dependant fields
+## Convention/Rule match
+
+Lucent provides methods to quickly check if a string matches a Convention or a Rule
+
+Convention
+```python
+string = "D:/projects/mySuperProject"
+# Using the equality operator
+conv = codex.get_convention(string)
+print(conv == codex.convs.project_root)
+# >>> True
+
+# Using conv.match()
+print(codex.convs.asset_dir.match(string))
+# >>> False
+```
+
+Rule
+```python
+rule = codex.rules.asset
+string = "hello world"
+if not rule.match(string):
+    print(rule.get_mismatch_message(string))
+# >>> The field "hello world" does not respect the rule (asset:"([a-z]+)([A-Z][a-z]*)*(\d{2})")
+# >>> Example : peach00, redApple01, philip02, cassie05
+```
+
+## Field generators
 Lucent has a couple of field generators to help you.
 ```python
 fields = {"item_name": "spoon"}

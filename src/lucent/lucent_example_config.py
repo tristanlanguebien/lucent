@@ -190,6 +190,20 @@ def example_rule_match():
     string = "hello world"
     if not rule.match(string):
         print(rule.get_mismatch_message(string))
+    # >>> The field "hello world" does not respect the rule (asset:"([a-z]+)([A-Z][a-z]*)*(\d{2})")
+    # >>> Example : peach00, redApple01, philip02, cassie05
+
+
+def example_convention_match():
+    string = "D:/projects/mySuperProject"
+    # Using the equality operator
+    conv = codex.get_convention(string)
+    print(conv == codex.convs.project_root)
+    # >>> True
+
+    # Using conv.match()
+    print(codex.convs.asset_dir.match(string))
+    # >>> False
 
 
 def example_convention_representations():
@@ -243,18 +257,19 @@ def example_codex_summary():
 
 
 def main():
-    example_format_convention()
-    example_fixed_fields()
-    example_solve()
-    example_solve_conv_and_fields()
-    example_transmute()
-    example_path_objects()
-    example_increment()
-    example_file_discovery()
-    example_field_generators()
+    # example_format_convention()
+    # example_fixed_fields()
+    # example_solve()
+    # example_solve_conv_and_fields()
+    # example_transmute()
+    # example_path_objects()
+    # example_increment()
+    # example_file_discovery()
+    # example_field_generators()
     example_rule_match()
-    example_convention_representations()
-    example_codex_summary()
+    # example_convention_match()
+    # example_convention_representations()
+    # example_codex_summary()
 
 
 if __name__ == "__main__":
