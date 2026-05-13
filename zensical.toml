@@ -1,0 +1,60 @@
+# TUTORIAL
+# Edit this file then run this command in the root directory
+# zensical build --clean  
+#
+# When done, a "site" folder should appear
+# To start the server, run the command:
+# python -m http.server 8000 --directory .\site
+#
+# The documentation can be seen by going on chrome :
+# http://localhost:8000/
+
+# ressources :
+# https://gist.github.com/rxaviers/7360908
+
+[project]
+site_name = "lucent"
+site_description = "Lucent is a system for defining, validating, and resolving naming conventions."
+site_url = "https://tristanlanguebien.github.io/lucent/"
+repo_url = "https://github.com/tristanlanguebien/lucent"
+repo_name = "tristanlanguebien/lucent"
+edit_uri = "edit/main/docs/" # ??
+nav = [
+    { "Home" = "index.md" },
+]
+
+# Palette toggle for dark mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "indigo"
+accent = "indigo"
+toggle.icon = "lucide/moon-star"
+toggle.name = ""
+
+[project.theme]
+features = [
+    "navigation.sections",
+    "navigation.top",
+    "search.suggest",
+    "search.highlight",
+    "content.tabs.link",
+    "content.code.annotation",
+    "content.code.copy",
+]
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
+
+# [project.markdown_extensions.pymdownx.highlight]
+# anchor_linenums = true
+
+# [project.markdown_extensions.pymdownx.superfences]
+
+# [project.markdown_extensions.pymdownx.tabbed]
+# alternate_style = true
+
+# [project.markdown_extensions.pymdownx.magiclink]
+
+# [project.markdown_extensions.toc]
+# permalink = true
