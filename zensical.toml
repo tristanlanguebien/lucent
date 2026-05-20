@@ -13,7 +13,7 @@
 # https://gist.github.com/rxaviers/7360908
 
 [project]
-site_name = "lucent"
+site_name = "Lucent"
 site_description = "Lucent is a system for defining, validating, and resolving naming conventions."
 site_url = "https://tristanlanguebien.github.io/lucent/"
 repo_url = "https://github.com/tristanlanguebien/lucent"
