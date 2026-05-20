@@ -41,5 +41,6 @@ include = ["lucent*"]
 
 [project.optional-dependencies]
 docs = [
-    "zensical"
+    "zensical",
+    "mkdocstrings-python"
 ]

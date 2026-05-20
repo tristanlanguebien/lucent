@@ -1,0 +1,111 @@
+/* BluePepper Stylesheet */
+/* Available colors : 
+Important ones :
+--md-default-fg-color # Text Color + text in callouts + svg logos
+--md-typeset-color # Text Color (overrides --md-default-fg-color)
+--md-admonition-fg-color # Callout text (overrides --md-default-fg-color)
+--md-default-bg-color # Background color
+--md-default-bg-color--light # Color of the top bar
+--md-typeset-a-color # Links (clashes with the primary palette color ?)
+
+
+# Less important ones
+--md-default-fg-color--lighter # Color of the scrollbar when hovering the main page
+--md-default-fg-color--lightest # Color of the search bar
+
+# Code
+--md-code-fg-color # Color of code attributes and `backtick` text
+--md-code-bg-color # Background of code blocks and `backtick` text
+--md-code-hl-number-color # integer and floats in code
+--md-code-hl-function-color # Modules, classes and function colors
+--md-code-hl-constant-color # Type annotations
+--md-code-hl-keyword-color # def, from, and return
+--md-code-hl-name-color # Attributes and variables
+--md-code-hl-operator-color # operators (=, |,...)
+--md-code-hl-punctuation-color # : and ()
+--md-code-hl-comment-color # Commented lines
+--md-code-hl-string-color # Stings
+
+
+# Basically useless
+--md-default-fg-color--light # commented lines + Text color of the "made-with"
+--md-code-bg-color--light # Hovered "copy to clipboard button"
+--md-code-bg-color--lighter # copy to clipboard button
+
+# Unused ?
+--md-default-bg-color--lighter
+--md-default-bg-color--lightest
+--md-code-hl-color
+--md-code-hl-color--light
+--md-code-hl-special-color
+--md-code-hl-generic-color
+--md-code-hl-variable-color
+--md-primary-fg-color
+--md-typeset-kbd-color
+--md-typeset-kbd-accent-color
+--md-typeset-kbd-border-color
+--md-typeset-mark-color
+--md-typeset-table-color
+--md-typeset-table-color--light
+--md-admonition-bg-color
+--md-footer-bg-color
+--md-footer-bg-color--dark
+--md-shadow-z1
+--md-shadow-z2
+--md-shadow-z3
+ */
+
+
+ [data-md-color-scheme="slate"] {
+  --md-default-bg-color--light: #3a2c10; /* Top bar Background */
+  --md-default-bg-color: #141310; /* Background */
+  --md-typeset-color: #d8d8d8; /* Text */
+  --md-code-bg-color: #0a0b0f77; /* Code blocks */
+  --md-typeset-a-color: #00a2ff; /* Links */
+  --md-admonition-fg-color: #eeeeee; /* Text in callouts */
+
+  /* Code */
+  --md-code-fg-color: #c7cdd8; /* Code text */
+  --md-code-hl-function-color: #50d4ba; /* Class names */
+  --md-code-hl-keyword-color: #5db1f7; /* class/def/return */
+  --md-code-hl-string-color: #d3936b; /* string color */
+  --md-code-hl-number-color: #91d494; /* number color */
+  --md-code-hl-operator-color: #bec7bf; /* number color */
+  --md-code-hl-comment-color: #6a994c; /* commented lines */
+  --md-code-hl-operator-color: #96958f; /* operators */
+  --md-code-hl-punctuation-color: #caaf15; /* parentheses and :*/
+}
+
+/* Bigger "Attributes", "Functions", "Methods" section headings (h3) */
+h3[id$="-attributes"],
+h3[id$="-functions"],
+h3[id$="-methods"],
+h3[id$="-classes"],
+h3[id$="-properties"] {
+  font-size: 1.6em !important;
+  margin-top: 2em !important;
+  margin-bottom: 1em !important;
+  border-bottom: 2px solid var(--md-default-fg-color--lighter);
+  padding-bottom: 0.4em;
+}
+
+/* Bigger attribute and method names (h4 headings) */
+h4.doc-heading {
+  font-size: 1.2em !important;
+}
+
+/* More space/separation after each attribute/method block */
+.doc-object.doc-attribute,
+.doc-object.doc-function,
+.doc-object.doc-method {
+  margin-bottom: 2.5em !important;
+  padding-bottom: 1.5em !important;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+/* Remove border from last item in each section */
+.doc-object.doc-attribute:last-child,
+.doc-object.doc-function:last-child,
+.doc-object.doc-method:last-child {
+  border-bottom: none;
+}

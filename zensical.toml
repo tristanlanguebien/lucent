@@ -19,16 +19,30 @@ site_url = "https://tristanlanguebien.github.io/lucent/"
 repo_url = "https://github.com/tristanlanguebien/lucent"
 repo_name = "tristanlanguebien/lucent"
 edit_uri = "edit/main/docs/" # ??
+extra_css = ["stylesheets/extra.css"]
 nav = [
     { "Home" = "index.md" },
+    { "Installation" = "installation.md" },
+    { "Configuration" = "configuration.md" },
+    { "Usage" = "usage.md" },
+    { "Lucent Watcher" = "watcher.md" },
+    { "Glossary" = "glossary.md" },
+    { "Acknowledgments" = "acknowledgments.md" },
+    { "Code Reference" = [
+        {"Codex" = "reference_codex.md"},
+        {"Convention" = "reference_convention.md"},
+        {"Conventions" = "reference_conventions.md"},
+        {"Rule" = "reference_rule.md"},
+        {"Rules" = "reference_rules.md"}
+    ]},
 ]
 
 # Palette toggle for dark mode
 [[project.theme.palette]]
 media = "(prefers-color-scheme: dark)"
 scheme = "slate"
-primary = "indigo"
-accent = "indigo"
+primary = "amber"
+accent = "amber"
 toggle.icon = "lucide/moon-star"
 toggle.name = ""
 
@@ -46,15 +60,38 @@ features = [
 [project.theme.icon]
 repo = "fontawesome/brands/github"
 
-# [project.markdown_extensions.pymdownx.highlight]
-# anchor_linenums = true
+[project.plugins.mkdocstrings.handlers.python]
+inventories = ["https://docs.python.org/3/objects.inv"]
+paths = ["src"]
 
-# [project.markdown_extensions.pymdownx.superfences]
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "google"
+inherited_members = true
+show_source = false
+docstring_section_style = "list"
+# extensions = []
+group_by_category = true
+heading_level = 2
+members_order = "alphabetical"
+merge_init_into_class = false
+modernize_annotations = true
+parameter_headings = false
+separate_signature = true
+show_category_heading = true
+show_docstring_attributes = false
+show_docstring_parameters = true
+show_docstring_returns = true
+show_if_no_docstring = true
+show_labels = false
+show_root_full_path = false
+show_root_heading = true
+show_root_toc_entry = false
+show_signature_annotations = true
+show_signature = true
+show_symbol_type_heading = true
+show_symbol_type_toc = true
+signature_crossrefs = true
+relative_crossrefs = true
+scoped_crossrefs = true
+filters = ["!^_"]
 
-# [project.markdown_extensions.pymdownx.tabbed]
-# alternate_style = true
-
-# [project.markdown_extensions.pymdownx.magiclink]
-
-# [project.markdown_extensions.toc]
-# permalink = true
