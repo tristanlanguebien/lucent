@@ -2,8 +2,10 @@
 
 Create a new module `lucent_config.py` :memo:
 
-!!! info
-    Lucent's configuration is done with a python file to allow for syntax highlighting and autocompletion, which becomes handy when you start to manage hundreds of naming conventions.
+??? question "Why a `.py` configuration file?"
+    Lucent uses a Python file for configuration to enable syntax highlighting and autocompletion, which is helpful when you manage hundreds of naming conventions.
+
+    Also, storing everything in a single object enables caching, which can improve performance.
 
 ### Rules
 
@@ -23,7 +25,10 @@ class MyRules(Rules):
 
     # Here are a few more simple examples.
     project = Rule(r"[a-zA-Z]+", examples=["mySuperProject"])
-    asset = Rule(r"([a-z]+)([A-Z][a-z]*)*(\d{2})", examples=["peach00", "redApple01", "philip02", "cassie05"])
+    asset = Rule(
+        r"([a-z]+)([A-Z][a-z]*)*(\d{2})",
+        examples=["peach00", "redApple01", "philip02", "cassie05"]
+    )
     type = Rule(r"[a-z]+", examples=["prop", "character", "environment"])
     group = Rule(r"[a-z]+", examples=["main", "secondary", "tertiary"])
     season = Rule(r"s\d{3}", examples=["s001"])
@@ -32,9 +37,24 @@ class MyRules(Rules):
     shot = Rule(r"sh\d{4}[A-Z]?", examples=["sh0010", "sh0010A"])
     version = Rule(r"\d{3}", examples=["001", "002", "003"])
 
-    # Rules are basically regular expressions with extra features. Feel free to get creative.
+    # Rules are basically regular expressions with extra features. Get creative!
     frame = Rule(r"\d{4}|#{4}|%04d", examples=["0001", "####", "%04d"])
 ```
+
+!!! success "Recommended"
+    The default value we recommend is letters and digits, mainly to exclude special characters and spaces, which are known to cause issues in paths and across multiple DCCs.
+
+!!! warning "Not Recommended"
+    Avoid characters universally understood as separators like `_`, `-` or `.`: you will risk making fields detection quite complicated.
+
+    ??? question "What if I need separators within a field?"
+        We recommend using:
+
+        - camelcase (`exampleOfMultiPartField`)
+            or
+        - kebabcase (`example-of-multi-part-field`)
+        
+        in conjunction with being very strict about what are considered field separators (for instance, having `_` as your universal separator).
 
 ### Conventions
 Now, let's define the Conventions.
@@ -52,9 +72,13 @@ class MyConventions(Conventions):
 
     # Some fields can be fixed. In this example, files ending with '.mp4' will not match,
     # and the template can be formatted without providing an extension field.
-    asset_maya_file = Convention("{@asset_dir}/{asset}_v{version}.{extension}", fixed_fields={"extension": "ma"})
+    asset_maya_file = Convention(
+        "{@asset_dir}/{asset}_v{version}.{extension}",
+        fixed_fields={"extension": "ma"}
+    )
     asset_publish_file = Convention(
-        "{@asset_dir}/publish/v{version}/someSubdir/{asset}_v{version}.{extension}", fixed_fields={"extension": "ma"}
+        "{@asset_dir}/publish/v{version}/someSubdir/{asset}_v{version}.{extension}",
+        fixed_fields={"extension": "ma"}
     )
 
     # Fixed fields can also be used to add extra constraints to an existing Convention.

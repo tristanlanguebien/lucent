@@ -1,8 +1,8 @@
 ## Requirements
 - Python >= 3.9
 
-Note: The new type annotation syntax was introduced in Python 3.9 (PEP 585), and while there is no plan for removal
-at the moment, using modern annotations is more future-proof.
+!!! info
+    The new type annotation syntax was introduced in Python 3.9 (PEP 585), and while there is no plan for removal at the moment, using modern annotations is more future-proof.
 
 ## Installation
 Use your preferred package installer:

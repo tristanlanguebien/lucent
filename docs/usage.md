@@ -20,7 +20,6 @@ print(codex.convs.asset_dir.format(fields))
 ### Fixed Fields
 You can use fixed fields to enforce some values (see fixed_fields in the configuration file).
 ```python
-# In this example, "type" is incorrect, and "extension" was omitted.
 fields = {
     "project": "myAwesomeProject",
     "asset": "hammer01",
@@ -30,6 +29,9 @@ fields = {
 print(codex.convs.prop_maya_file.format(fields))
 # >>> D:/projects/myAwesomeProject/library/env/hammer01/hammer01_v001.ma
 ```
+
+!!! info
+    In this example, `type` is incorrect and `extension` is omitted, but formatting still works thanks to fixed fields.
 
 ## Solve a String
 Let's solve a string to identify the Convention and extract fields.

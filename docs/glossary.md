@@ -28,4 +28,4 @@ A registry of all Convention objects within the Codex.
 ### Codex
 The top-level container that brings together all Rules and Conventions.
 It defines a complete naming framework capable of validating, resolving,
-and managing names according to the established conventions.
+and managing naming conventions.
