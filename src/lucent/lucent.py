@@ -992,7 +992,7 @@ class Codex:
             raise LucentParseError(f"The provided string does not match any convention : {string}")
 
     def get_fields(
-        self, string: str, conventions: list[Convention] | None = None, reverse: bool = True
+        self, string: str | Path, conventions: list[Convention] | None = None, reverse: bool = True
     ) -> dict[str, str]:
         """
         Parse a string and return its fields.
