@@ -814,10 +814,13 @@ class Convention:
             )
         return paths[-1]
 
-    def show_mismatch(self, string: str, fields: Optional[dict[str, str]] = None):
+    def show_mismatch(self, string: str | Path, fields: Optional[dict[str, str]] = None):
         """
         Compare the provided string against a reference string generated from the provided fields.
         """
+        if isinstance(string, Path):
+            string = string.as_posix()
+
         if self.match(string):
             logging.info(f"The provided string matches the Convention : {string}")
             return
