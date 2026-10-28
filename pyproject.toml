@@ -1,6 +1,6 @@
 [project]
 name = "lucent-codex"
-version = "0.0.3"
+version = "0.0.4"
 description = "System for defining, validating, and resolving naming conventions."
 readme = "README.md"
 authors = [
@@ -45,4 +45,8 @@ include = ["lucent*"]
 docs = [
     "zensical",
     "mkdocstrings-python"
+]
+dev = [
+    "build",
+    "twine",
 ]
