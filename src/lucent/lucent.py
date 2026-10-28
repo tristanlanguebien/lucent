@@ -187,6 +187,7 @@ class Convention:
     Args:
         template: Template string
         fixed_fields: Optional mapping of field names to constant values.
+        ignore_solve: Set to True to exclude this Convention from Codex-level solve operations. Parsing and formatting operations will still be available.
     """
 
     # The name will be automatically filled when initializing the Conventions object
@@ -195,6 +196,7 @@ class Convention:
     # Fillable at creation
     template: str
     fixed_fields: dict[str, str] = dataclass_field(default_factory=dict[str, str])
+    ignore_solve: bool = False
 
     def __post_init__(self):
         self._codex: Codex
@@ -870,7 +872,7 @@ class Conventions:
         Register Convention instances so they can be accessed by name
         """
         self._convention_instances = []
-        for attr in dir(self):
+        for attr in list(self.__class__.__dict__.keys()):
             if attr.startswith("_"):
                 continue
             convention = getattr(self, attr)
@@ -975,10 +977,13 @@ class Codex:
         else:
             conventions = [convention for convention in self.convs._convention_instances if convention in _conventions]
 
+        # Filter out conventions that are not designed to be solved
+        conventions = [convention for convention in conventions if not convention.ignore_solve]
+
         # Assuming conventions are written from less to more specific, Codex may be reversed
         # so the function returns the most specific Convention
         if reverse:
-            conventions = reversed(conventions)
+            conventions = list(reversed(conventions))
 
         for convention in conventions:
             try:
