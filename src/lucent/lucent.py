@@ -949,7 +949,7 @@ class Codex:
         return result
 
     def solve(
-        self, string: str | Path, conventions: list[Convention] | None = None, reverse: bool = False
+        self, string: str | Path, conventions: list[Convention] | None = None, reverse: bool = True
     ) -> Tuple[Convention, dict[str, str]]:
         """
         Iterates through available Conventions (or a provided subset) and tries to parse the string.
@@ -978,7 +978,7 @@ class Codex:
         # Assuming conventions are written from less to more specific, Codex may be reversed
         # so the function returns the most specific Convention
         if reverse:
-            conventions.reverse()
+            conventions = reversed(conventions)
 
         for convention in conventions:
             try:
