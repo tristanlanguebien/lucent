@@ -31,6 +31,9 @@ class MyRules(Rules):
 
     # Rules are basically regular expressions with extra features. Feel free to get creative.
     frame = Rule(r"\d{4}|#{4}|%04d", examples=["0001", "####", "%04d"])
+
+    # Naming conventions are restrictive by nature, but some rules can be more flexible than others.
+    # If you use such rules, make sure to configure your Conventions accordingly.
     catchall = Rule(r".+")
 
 

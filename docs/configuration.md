@@ -39,6 +39,10 @@ class MyRules(Rules):
 
     # Rules are basically regular expressions with extra features. Get creative!
     frame = Rule(r"\d{4}|#{4}|%04d", examples=["0001", "####", "%04d"])
+
+    # Naming conventions are restrictive by nature, but some rules can be more flexible than others.
+    # If you use such rules, make sure to configure your Conventions accordingly.
+    catchall = Rule(r".+")
 ```
 
 !!! success "Recommended"
@@ -94,6 +98,11 @@ class MyConventions(Conventions):
     maya_asset_dag_path = Convention("|assets|{type}|{type}_{asset}")
     unique_id_with_datetime = Convention("{item_name}_{year}_{month}_{day}_{hour}_{min}_{sec}_{uuid}")
     api_route = Convention("https://api.example.com/{project}/{asset}")
+
+    # If you create overly broad Conventions, they can interfere with solving operations.
+    # In this example, trying to solve a string will always return "any_text".
+    # You can use the `ignore_solve` argument to prevent this behavior.
+    any_text = Convention("{catchall}", ignore_solve=True)
 ```
 
 ### Codex
